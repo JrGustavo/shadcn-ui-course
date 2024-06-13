@@ -1,14 +1,15 @@
-// https://tailwindcomponents.com/component/tailwind-css-admin-dashboard-layout
-// https://gist.github.com/Klerith/3949f1c8b884d7101e378dfb668f0f3a
 
 import Link from "next/link";
 
 const links = [
-    { name: "accordion", href: "accordion" },
-    { name: "alert", href: "alert" },
-    { name: "button", href: "button" },
+    { name: "Accordion", href: "accordion" },
+    { name: "Alert", href: "alert" },
+    { name: "Button", href: "button" },
     { name: "Alerta", href: "alert-dialog" },
-];
+    { name: "Dialog", href: "dialog" },
+    { name: "Badge", href: "badge" },
+    { name: "Calendar", href: "calendar" },
+].sort((a, b) => a.name.localeCompare(b.name))
 
 export default function DashboardLayout({
                                             children,
