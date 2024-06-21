@@ -1,4 +1,6 @@
 import {payments} from "@/app/data/payments.data";
+import {DataTable} from "@/app/dashboard/data-table/DataTable";
+import {columns} from "@/app/dashboard/data-table/Columns";
 
 
 async function fetchData(){
@@ -12,9 +14,7 @@ export default async function Page() {
 
     return (
         <div>
-            <pre>
-                {JSON.stringify(data, null, 2)}
-            </pre>
+<DataTable columns={columns}  data={data}  />
         </div>
     )
 }
