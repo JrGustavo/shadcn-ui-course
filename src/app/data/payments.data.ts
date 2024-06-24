@@ -7,7 +7,7 @@ const config: Config = {
 
 export type Payment = {
     id: string;
-    amount: number;
+    amount: number; // $100.00
     status: "pending" | "processing" | "success" | "failed";
     email: string;
     clientName: string;
@@ -24,7 +24,7 @@ const randomEmail = (clientName: string) => {
     return `${clientName}@${randomDomain}`;
 };
 
-export const payments: Payment[] = Array.from({ length: 500 }, (_) => {
+export const payments: Payment[] = Array.from({ length: 100 }, (_) => {
     const randomName = uniqueNamesGenerator(config);
 
     return {

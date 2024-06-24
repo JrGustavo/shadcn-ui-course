@@ -1,13 +1,10 @@
-"use client"
+"use client";
 
-import { ColumnDef } from "@tanstack/react-table"
-import {Payment} from "@/app/data/payments.data";
-import {Badge} from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
-import { Button } from "@/components/ui/button"
+import { ColumnDef, FilterFn, Row, SortDirection } from "@tanstack/react-table";
 
+import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -15,29 +12,108 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {DotsHorizontalIcon} from "@radix-ui/react-icons";
-import {toast} from "@/components/ui/use-toast";
+} from "@/components/ui/dropdown-menu";
 
+import { Checkbox } from "@/components/ui/checkbox";
 
+import {
+    ChevronDownIcon,
+    ChevronUpIcon,
+    DotsHorizontalIcon,
+} from "@radix-ui/react-icons";
+import { toast } from "sonner";
+import {Payment} from "@/app/data/payments.data";
 
+// import { toast } from "@/components/ui/use-toast";
 
+const myCustomFilterFn: FilterFn<Payment> = (
+    row: Row<Payment>,
+    columnId: string,
+    filterValue: string,
+    addMeta: (meta: any) => void
+) => {
+    filterValue = filterValue.toLowerCase();
+
+    const filterParts = filterValue.split(" ");
+    const rowValues =
+        `${row.original.email} ${row.original.clientName} ${row.original.status}`.toLowerCase();
+
+    return filterParts.every((part) => rowValues.includes(part));
+};
+
+const SortedIcon = ({ isSorted }: { isSorted: false | SortDirection }) => {
+    if (isSorted === "asc") {
+        return <ChevronUpIcon className="h-4 w-4" />;
+    }
+
+    if (isSorted === "desc") {
+        return <ChevronDownIcon className="h-4 w-4" />;
+    }
+
+    return null;
+};
+
+// This type is used to define the shape of our data.
+// You can use a Zod schema here if you want.
 export const columns: ColumnDef<Payment>[] = [
     {
-        accessorKey: "status",
-        header: "Status",
+        id: "select",
+        header: ({ table }) => (
+            <Checkbox
+                checked={
+                    table.getIsAllPageRowsSelected() ||
+                    (table.getIsSomePageRowsSelected() && "indeterminate")
+                }
+                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                aria-label="Select all"
+            />
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                aria-label="Select row"
+            />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+    },
+    {
+        accessorKey: "clientName",
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Client Name
+                    <SortedIcon isSorted={column.getIsSorted()} />
+                </Button>
+            );
+        },
     },
     {
         accessorKey: "status",
-        header: "Status",
-        cell:  ({ row}) => {
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Status
+                    <SortedIcon isSorted={column.getIsSorted()} />
+                </Button>
+            );
+        },
+        cell: ({ row }) => {
             const status = row.getValue("status") as string;
-            const variant = {
-                pending: "secondary",
-                processing: "secondary",
-                success: "success",
-                failed: "destructive",
-            }[status] ?? ('default') as any;
+            const variant =
+                {
+                    pending: "secondary",
+                    processing: "info",
+                    success: "success",
+                    failed: "destructive",
+                }[status] ?? ("default" as any);
 
             return (
                 <Badge variant={variant} capitalize>
@@ -46,33 +122,52 @@ export const columns: ColumnDef<Payment>[] = [
             );
         },
     },
-
     {
         accessorKey: "amount",
-        header: () => <div className="text-right">Amount</div>,
+        header: ({ column }) => {
+            return (
+                <div className="text-right">
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Amount
+                        <SortedIcon isSorted={column.getIsSorted()} />
+                    </Button>
+                </div>
+            );
+        },
+        // header: () => <div className="text-right">Amount</div>,
         cell: ({ row }) => {
-            const amount = parseFloat(row.getValue("amount"))
+            const amount = parseFloat(row.getValue("amount"));
             const formatted = new Intl.NumberFormat("en-US", {
                 style: "currency",
-                currency: "COP",
-            }).format(amount)
+                currency: "USD",
+            }).format(amount);
 
-            return <div className="text-right font-medium">{formatted}</div>
+            return <div className="text-right font-medium">{formatted}</div>;
         },
     },
     {
         accessorKey: "email",
-        header: "Email",
+        filterFn: myCustomFilterFn,
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Email
+                    <SortedIcon isSorted={column.getIsSorted()} />
+                </Button>
+            );
+        },
     },
 
     {
-        accessorKey: "clientName",
-        header: "Client Name",
-    },
-    {
         id: "actions",
         cell: ({ row }) => {
-            const payment = row.original
+            const payment = row.original;
 
             return (
                 <DropdownMenu>
@@ -87,9 +182,13 @@ export const columns: ColumnDef<Payment>[] = [
                         <DropdownMenuItem
                             onClick={() => {
                                 navigator.clipboard.writeText(payment.id);
-                            toast({
-                                description: "Payment ID copied to clipboard",
-                            })
+                                toast("Payment ID copied to clipboard", {
+                                    position: "top-right",
+                                    duration: 3000,
+                                });
+                                // toast({
+                                //   description: "Payment ID copied to clipboard",
+                                // });
                             }}
                         >
                             Copy payment ID
@@ -99,11 +198,7 @@ export const columns: ColumnDef<Payment>[] = [
                         <DropdownMenuItem>View payment details</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            )
+            );
         },
     },
-
-
-
-
-]
+];
